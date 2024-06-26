@@ -15,7 +15,7 @@ import NavBar from "./nav-bar";
 const data = [
   {
     date: "11/06/2024",
-    hours: [1, 0, 1, 1], //, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    hours: [-1, 0, 1, 2, 3, 4], //, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     duration: 8.15,
   },
   {
@@ -55,7 +55,9 @@ const data = [
   // },
 ];
 
-const colors = ["#A9A9A9", "#FFD700"]; //, '#FF00FF', '#FFFF00'];
+const colors = ["#A9A9A9", "#FFD700", "#FF00FF", "#FFFF00"]; // Adding more colors
+const negativeColor = "#FF0000"; // Negative color for negative values like < 0
+const defaultColor = "#000000"; // Default color for invalid values like > 3
 
 const UtilizationDetailsStatic = () => {
   return (
@@ -73,7 +75,11 @@ const UtilizationDetailsStatic = () => {
           type="number"
           domain={[0, 24]}
           tickCount={25}
-          label={{ value: "Hour", position: "insideBottomRight", offset: -20 }}
+          label={{
+            value: "Hour",
+            position: "insideBottomRight",
+            offset: -20,
+          }}
         />
         <YAxis dataKey="date" type="category" />
         <Tooltip cursor={{ fill: "rgba(255, 255, 255, 0.2)" }} />
@@ -83,17 +89,14 @@ const UtilizationDetailsStatic = () => {
           <Fragment key={index}>
             {entry.hours.map((hour, i) => (
               <Bar dataKey="hours" key={`cell-${index}-${i}`} fill="#8884d8">
-                <Fragment>
-                  {console.log(i)}
-                  <Cell
-                    key={`cell-${index}-${i}`}
-                    fill={colors[hour]}
-                    x={(i / 23) * 1000}
-                    width={1000 / 24}
-                    y={(index + 2) * 45}
-                    height={40}
-                  />
-                </Fragment>
+                <Cell
+                  key={`cell-${index}-${i}`}
+                  fill={hour < 0 ? negativeColor : colors[hour] || defaultColor} // Use red for negative values, default color otherwise
+                  x={(i / entry.hours.length) * 1000}
+                  width={1000 / entry.hours.length}
+                  y={(index * 2 + 1) * 45} // Adjusted y position to stagger rows
+                  height={40}
+                />
               </Bar>
             ))}
           </Fragment>
