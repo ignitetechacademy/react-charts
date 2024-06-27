@@ -1,109 +1,184 @@
 import React, { Fragment } from "react";
 import {
   BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   CartesianGrid,
-  Cell,
-  Bar,
+  ResponsiveContainer,
+  Text,
 } from "recharts";
 import NavBar from "./nav-bar";
 
-// Sample Data
-const data = [
+const rawData = [
   {
     date: "11/06/2024",
-    hours: [-1, 0, 1, 2, 3, 4], //, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    day: "Tue",
+    hours: [
+      1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1,
+    ],
     duration: 8.15,
   },
   {
     date: "12/06/2024",
-    hours: [0, 1, 0, 0], //, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0],
+    day: "Wed",
+    hours: [
+      0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0,
+    ],
     duration: 8.37,
   },
   {
     date: "13/06/2024",
-    hours: [0, 0, 1, 0], //, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    duration: 0.12,
+    day: "Thu",
+    hours: [
+      0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    ],
+    duration: 5.12,
   },
-  // {
-  //   date: '14/06/2024',
-  //   hours: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-  //   duration: 0.45,
-  // },
-  // {
-  //   date: '15/06/2024',
-  //   hours: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   duration: 0.13,
-  // },
-  // {
-  //   date: '16/06/2024',
-  //   hours: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   duration: 0.38,
-  // },
-  // {
-  //   date: '17/06/2024',
-  //   hours: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   duration: 1.2,
-  // },
-  // {
-  //   date: '18/06/2024',
-  //   hours: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   duration: 1.2,
-  // },
+  {
+    date: "14/06/2024",
+    day: "Fri",
+    hours: [
+      1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1,
+    ],
+    duration: 7.15,
+  },
+  {
+    date: "15/06/2024",
+    day: "Sat",
+    hours: [
+      0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0,
+    ],
+    duration: 3.37,
+  },
+  {
+    date: "16/06/2024",
+    day: "Sun",
+    hours: [
+      0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    ],
+    duration: 3.12,
+  },
+  {
+    date: "17/06/2024",
+    day: "Mon",
+    hours: [
+      0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0,
+    ],
+    duration: 8.37,
+  },
 ];
 
-const colors = ["#A9A9A9", "#FFD700", "#FF00FF", "#FFFF00"]; // Adding more colors
-const negativeColor = "#FF0000"; // Negative color for negative values like < 0
-const defaultColor = "#000000"; // Default color for invalid values like > 3
+const transformData = (data) => {
+  return data.map((item) => {
+    const hoursData = item.hours.map((hour, index) => ({
+      hour: index,
+      status:
+        hour === 1
+          ? "working"
+          : hour < 0
+          ? "negative"
+          : hour > 1
+          ? "black"
+          : "idle",
+    }));
 
-const UtilizationDetailsStatic = () => {
+    return {
+      date: `${item.date} ${item.day}`,
+      duration: item.duration,
+      hours: hoursData,
+    };
+  });
+};
+
+const transformedData = transformData(rawData);
+
+const CustomYAxisTick = ({ x, y, payload }) => {
   return (
-    <Fragment>
-      <NavBar />
-      <BarChart
-        width={1000}
-        height={400}
-        data={data}
-        layout="vertical"
-        barCategoryGap="1%"
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          type="number"
-          domain={[0, 24]}
-          tickCount={25}
-          label={{
-            value: "Hour",
-            position: "insideBottomRight",
-            offset: -20,
-          }}
-        />
-        <YAxis dataKey="date" type="category" />
-        <Tooltip cursor={{ fill: "rgba(255, 255, 255, 0.2)" }} />
-        <Legend />
-
-        {data.map((entry, index) => (
-          <Fragment key={index}>
-            {entry.hours.map((hour, i) => (
-              <Bar dataKey="hours" key={`cell-${index}-${i}`} fill="#8884d8">
-                <Cell
-                  key={`cell-${index}-${i}`}
-                  fill={hour < 0 ? negativeColor : colors[hour] || defaultColor} // Use red for negative values, default color otherwise
-                  x={(i / entry.hours.length) * 1000}
-                  width={1000 / entry.hours.length}
-                  y={(index * 2 + 1) * 45} // Adjusted y position to stagger rows
-                  height={40}
-                />
-              </Bar>
-            ))}
-          </Fragment>
-        ))}
-      </BarChart>
-    </Fragment>
+    <Text x={x} y={y} width={140} textAnchor="end" verticalAnchor="middle">
+      {payload.value}
+    </Text>
   );
 };
 
-export default UtilizationDetailsStatic;
+const CustomDurationTick = ({ x, y, payload }) => {
+  const duration = transformedData.find(
+    (item) => item.date === payload.value
+  )?.duration;
+  const durationString = `${Math.floor(duration)}hr ${Math.round(
+    (duration % 1) * 60
+  )}m`;
+
+  return (
+    <Text x={x} y={y} width={140} textAnchor="start" verticalAnchor="middle">
+      {durationString}
+    </Text>
+  );
+};
+
+const UtilizationChart = () => {
+  return (
+    <>
+      <NavBar />
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart
+          data={transformedData}
+          layout="vertical"
+          margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+          barCategoryGap={2}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            type="number"
+            domain={[0, 24]}
+            tickCount={25}
+            orientation="top"
+          />
+          <YAxis
+            type="category"
+            dataKey="date"
+            tick={<CustomYAxisTick />}
+            width={100}
+            yAxisId="left"
+          />
+          <YAxis
+            type="category"
+            dataKey="date"
+            tick={<CustomDurationTick />}
+            width={100}
+            orientation="right"
+            yAxisId="right"
+          />
+          <Tooltip />
+          {Array.from({ length: 24 }, (_, index) => (
+            <Fragment key={index}>
+              {["working", "idle", "negative", "black"].map((status, i) => (
+                <Bar
+                  key={`${index}-${status}`}
+                  dataKey={(entry) =>
+                    entry.hours[index]?.status === status ? 1 : 0
+                  }
+                  name={`Hour ${index}`}
+                  stackId="a"
+                  fill={
+                    i === 0
+                      ? "#FFFF00"
+                      : i === 1
+                      ? "#808080"
+                      : i === 2
+                      ? "#FF0000"
+                      : "#000000"
+                  }
+                  yAxisId="left"
+                />
+              ))}
+            </Fragment>
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </>
+  );
+};
+
+export default UtilizationChart;
