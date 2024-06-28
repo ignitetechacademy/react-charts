@@ -150,6 +150,7 @@ const rawData = [
       { startTime: 13.0, endTime: 14.0, action: 0 },
       { startTime: 14.0, endTime: 15.0, action: 1 },
       { startTime: 15.0, endTime: 16.0, action: 0 },
+      { startTime: 16.0, endTime: 17.0, action: 0 },
       { startTime: 17.0, endTime: 18.0, action: 1 },
       { startTime: 18.0, endTime: 21.0, action: 1 },
       { startTime: 21.0, endTime: 24.0, action: 0 },
@@ -209,47 +210,60 @@ const rawData = [
   },
 ];
 
+// Mapping actions to descriptions and colors
+const actionDescriptions = {
+  1: "Start", // Yellow for Start
+  0: "Off", // Gray for Off
+  2: "Other", // Black for Other
+  "-1": "Idle", // Red for Idle
+  // Add other action descriptions as needed...
+};
+
+const actionColors = {
+  1: "#FFFF00", // Yellow for Start
+  0: "#808080", // Gray for Off
+  2: "#000000", // Black for Other
+  "-1": "#FF0000", // Red for Idle
+  // Add other action colors as needed...
+};
+
 const UtilizationChart = () => {
   // Function to determine color and duration based on action value
   const getColorAndDuration = (action, startTime, endTime, duration) => {
-    let color = "#808080"; // Default gray color
-    let formattedDuration = "";
-
-    if (action === 1) {
-      color = "#FFFF00"; // Yellow for action 1
-    } else if (action < 0) {
-      color = "#FF0000"; // Red for action -1
-    } else if (action > 1) {
-      color = "#000000"; // Black for action greater than 1
-    }
+    let color = actionColors[action] || "#000000"; // Default black color for other actions
 
     // Calculate hours and minutes
     const hours = Math.floor(duration);
     const minutes = Math.round((duration - hours) * 60);
-    formattedDuration = `${hours}hr ${minutes}m`;
+    const formattedDuration = `${hours}hr ${minutes}m`;
 
     return { color, duration: formattedDuration };
   };
 
   // Prepare data for ApexCharts
-  const seriesData = rawData.map((entry) => ({
-    name: entry.date,
-    data: entry.hours.map((hour) => ({
-      x: entry.date,
-      y: [hour.startTime, hour.endTime],
-      fillColor: getColorAndDuration(
-        hour.action,
-        hour.startTime,
-        hour.endTime,
-        entry.duration
-      ).color,
-      duration: getColorAndDuration(
-        hour.action,
-        hour.startTime,
-        hour.endTime,
-        entry.duration
-      ).duration,
-    })),
+  const seriesData = Object.keys(actionDescriptions).map((action) => ({
+    name: actionDescriptions[action],
+    data: rawData.flatMap((entry) =>
+      entry.hours
+        .filter((hour) => hour.action === parseInt(action))
+        .map((hour) => ({
+          x: entry.date,
+          y: [hour.startTime, hour.endTime],
+          fillColor: getColorAndDuration(
+            hour.action,
+            hour.startTime,
+            hour.endTime,
+            entry.duration
+          ).color,
+          action: hour.action,
+          duration: getColorAndDuration(
+            hour.action,
+            hour.startTime,
+            hour.endTime,
+            entry.duration
+          ).duration,
+        }))
+    ),
   }));
 
   const chartData = {
@@ -291,21 +305,18 @@ const UtilizationChart = () => {
       tooltip: {
         y: {
           formatter: function (val) {
-            if (val && val.length === 2) {
-              return `${val[0]}:00 - ${val[1]}:00`;
-            }
-            return "";
+            return val;
           },
         },
       },
-      colors: seriesData.flatMap((series) =>
-        series.data.map((data) => data.fillColor)
+      colors: Object.keys(actionDescriptions).map(
+        (action) => actionColors[action]
       ),
     },
     series: seriesData,
   };
 
-  // Render the chart component and a separate div for displaying duration next to the chart
+  // Render the chart component
   return (
     <Fragment>
       <NavBar />
